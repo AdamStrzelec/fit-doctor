@@ -4,7 +4,15 @@ import { useChat } from "ai/react";
 import { useEffect, useRef } from "react";
 
 export default function AIPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading, stop, setInput } = useChat({
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    stop,
+    setInput,
+  } = useChat({
     api: "/api/ai/chat",
     initialMessages: [
       { id: "sys-1", role: "assistant", content: "Cześć! Jak mogę pomóc?" },
@@ -34,10 +42,7 @@ export default function AIPage() {
         <div ref={endRef} />
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex items-center gap-2"
-      >
+      <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <input
           value={input}
           onChange={handleInputChange}
