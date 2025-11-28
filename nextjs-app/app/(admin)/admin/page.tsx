@@ -34,6 +34,20 @@ export default function AdminPage() {
   const [loadingOrdersMeta, setLoadingOrdersMeta] = useState(false);
   const [ordersMetaError, setOrdersMetaError] = useState<string | null>(null);
 
+  // EDM login/status state
+  const [edmStatus, setEdmStatus] = useState<{
+    loggedIn: boolean;
+    id?: string;
+    lastRefreshedAt?: string | null;
+    nextRefreshAt?: string | null;
+  } | null>(null);
+  const [edmLoading, setEdmLoading] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  const [edmUsername, setEdmUsername] = useState("");
+  const [edmPassword, setEdmPassword] = useState("");
+
   useEffect(() => {
     const fetchUser = async () => {
       if (!sessionData?.user?.email) return;
@@ -77,6 +91,71 @@ export default function AdminPage() {
     fetchOrdersMeta();
   }, []);
 
+  useEffect(() => {
+    // fetch EDM status on mount
+    fetchEdmStatus();
+  }, []);
+
+  const fetchEdmStatus = async () => {
+    setEdmLoading(true);
+    try {
+      const res = await fetch("/api/edm/status");
+      if (!res.ok) {
+        setEdmStatus(null);
+        return;
+      }
+      const json = await res.json();
+      setEdmStatus(json);
+    } catch (err) {
+      console.error("fetch edm status", err);
+      setEdmStatus(null);
+    } finally {
+      setEdmLoading(false);
+    }
+  };
+
+  const submitEdmLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError(null);
+    setLoginLoading(true);
+    try {
+      const res = await fetch("/api/edm/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: edmUsername, password: edmPassword }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || "Login failed");
+      }
+      const json = await res.json();
+      if (!json?.ok) throw new Error("Login failed");
+      // refresh status
+      await fetchEdmStatus();
+      setEdmUsername("");
+      setEdmPassword("");
+    } catch (err: any) {
+      console.error("EDM login error", err);
+      setLoginError(err?.message ?? "Błąd logowania");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleEdmRefreshNow = async () => {
+    if (!edmStatus?.id) return;
+    try {
+      await fetch("/api/edm/refresh-one", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: edmStatus.id }),
+      });
+      await fetchEdmStatus();
+    } catch (err) {
+      console.error("edm refresh now error", err);
+    }
+  };
+
   const logout = () => {
     signOut({ callbackUrl: "/login" });
   };
@@ -117,7 +196,81 @@ export default function AdminPage() {
             ) : null}
           </div>
 
-          {/* Orders metadata */}
+          <div className="w-full mt-2">
+            <div className="w-full max-w-[28rem]">
+              <h4 className="text-sm font-semibold mb-2">MyDr EDM</h4>
+
+              {edmLoading ? (
+                <div>Sprawdzanie statusu EDM...</div>
+              ) : edmStatus?.loggedIn ? (
+                <div className="text-sm text-color-tertiary">
+                  <div>Połączono z myDr EDM</div>
+                  <div className="mt-2 text-xs">
+                    Ostatnio odświeżono:{" "}
+                    {edmStatus.lastRefreshedAt
+                      ? new Date(edmStatus.lastRefreshedAt).toLocaleString()
+                      : "-"}
+                  </div>
+                  <div className="text-xs">
+                    Następne odświeżenie:{" "}
+                    {edmStatus.nextRefreshAt
+                      ? new Date(edmStatus.nextRefreshAt).toLocaleString()
+                      : "-"}
+                  </div>
+
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={handleEdmRefreshNow}
+                      className="px-3 py-1 border rounded text-sm hover:bg-background-primary/10"
+                    >
+                      Odśwież teraz
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="text-sm text-color-tertiary mb-2">
+                    Nie połączono z myDr EDM — zaloguj konto
+                  </div>
+                  <form
+                    onSubmit={submitEdmLogin}
+                    className="flex flex-col gap-2"
+                  >
+                    <input
+                      placeholder="Login EDM"
+                      value={edmUsername}
+                      onChange={(e) => setEdmUsername(e.target.value)}
+                      className="px-3 py-2 rounded border bg-background-primary/20"
+                      required
+                    />
+                    <input
+                      placeholder="Hasło EDM"
+                      value={edmPassword}
+                      onChange={(e) => setEdmPassword(e.target.value)}
+                      type="password"
+                      className="px-3 py-2 rounded border bg-background-primary/20"
+                      required
+                    />
+
+                    {loginError && (
+                      <div className="text-xs text-red-600">{loginError}</div>
+                    )}
+
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="submit"
+                        disabled={loginLoading}
+                        className="px-3 py-2 border rounded text-sm hover:bg-background-primary/10"
+                      >
+                        {loginLoading ? "Logowanie..." : "Zaloguj do EDM"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="w-full mt-2">
             <div className="flex flex-col sm:items-center justify-center gap-2">
               <div className="text-sm text-color-tertiary mb-1 sm:mb-0 text-center">

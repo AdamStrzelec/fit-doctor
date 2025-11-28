@@ -12,6 +12,7 @@
     "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.74",
     "@aws-sdk/client-s3": "^3.932.0",
     "@aws-sdk/s3-request-presigner": "^3.932.0",
     "@next-auth/prisma-adapter": "^1.0.7",
@@ -35,6 +36,7 @@
     "@stripe/stripe-js": "^8.1.0",
     "@tailwindcss/typography": "^0.5.16",
     "@vercel/speed-insights": "^1.1.0",
+    "ai": "^3.4.33",
     "autoprefixer": "^10.4.20",
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.5.1",
@@ -88,5 +90,8 @@
     "tailwindcss": "^4.1.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3"
+  },
+  "overrides": {
+    "zod": "3.25.76"
   }
 }

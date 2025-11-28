@@ -19,8 +19,8 @@ export async function POST(req: Request) {
     mode: "payment",
     line_items: [{ price: priceId, quantity: 1 }],
     customer_email: 'adam@niepodam.pl',
-    success_url: "http://localhost:3000",
-    cancel_url: "http://localhost:3000",
+    success_url: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
+    cancel_url: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
   });
 
   return NextResponse.json({ url: session.url });
