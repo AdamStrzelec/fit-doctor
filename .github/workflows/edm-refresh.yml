@@ -1,0 +1,30 @@
+name: EDM Refresh Tokens
+
+on:
+  schedule:
+    # - cron: "0 */1 * * *" # co 1 godzinę
+    - cron: "*/30 * * * *" # co 30 minut
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call EDM refresh endpoint
+        env:
+          API_URL: ${{ secrets.ADMIN_API_URL }}
+          API_KEY: ${{ secrets.ADMIN_REFRESH_KEY }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$API_KEY" ]; then
+            echo "ADMIN_API_URL and ADMIN_REFRESH_KEY must be set in repo secrets"
+            exit 1
+          fi
+          echo "Calling $API_URL"
+          HTTP_STATUS=$(curl -s -o /tmp/edm_refresh_response.txt -w "%{http_code}" -X POST "$API_URL" -H "Authorization: Bearer $API_KEY" -H "Accept: application/json")
+          echo "Status: $HTTP_STATUS"
+          echo "Response:"
+          cat /tmp/edm_refresh_response.txt
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "EDM refresh failed"
+            exit 1
+          fi
