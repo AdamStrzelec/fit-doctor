@@ -11,6 +11,11 @@ generator client {
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
+  // Connection URLs are no longer supported in schema files.
+  // Move connection URLs for Migrate to `prisma.config.ts` and pass
+  // either `adapter` for a direct database connection or `accelerateUrl`
+  // for Accelerate to the `PrismaClient` constructor.
+  // See https://pris.ly/d/config-datasource and https://pris.ly/d/prisma7-client-config
 }
 
 enum Role {
@@ -206,4 +211,20 @@ model PaymentNote {
   createdAt  DateTime @default(now())
 
   @@index([paymentId])
+}
+
+model EdmAuth {
+  id                      String   @id @default(auto()) @map("_id") @db.ObjectId
+  encryptedRefreshToken   String   // ciphertext (AES-GCM), base64
+  refreshTokenHash        String   @unique
+  encryptedAccessToken    String?  // opcjonalnie: ciphertext dla access token
+  accessTokenExpiresAt    DateTime?
+  lastRefreshedAt         DateTime?
+  nextRefreshAt           DateTime? // kiedy planujemy kolejne odświeżenie
+  revoked                 Boolean  @default(false)
+  refreshFailureCount     Int      @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([nextRefreshAt])
 }
