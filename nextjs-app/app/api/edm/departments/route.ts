@@ -87,7 +87,7 @@ export async function GET(req: Request) {
     }
 
     const base = process.env.EDM_URL ?? "https://api.edm.mydr.pl/secure/ext_api";
-    const url = `${base}/departments/`; // adjust if endpoint differs
+    const url = `${base}/offices/`; // adjust if endpoint differs
     const resp = await fetch(url, {
       method: "GET",
       headers: {
@@ -103,7 +103,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(body, { status });
   } catch (err: any) {
-    console.error("GET /api/edm/departments error:", err);
+    console.error("GET /api/edm/offices error:", err);
     return NextResponse.json({ error: "server_error", details: err?.message ?? String(err) }, { status: 500 });
   }
 }
