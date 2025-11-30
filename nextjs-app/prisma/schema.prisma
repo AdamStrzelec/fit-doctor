@@ -71,6 +71,8 @@ model User {
 
   weights           WeightEntry[]
 
+  externalPatientId Int?
+
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 }
@@ -227,4 +229,15 @@ model EdmAuth {
   updatedAt               DateTime @updatedAt
 
   @@index([nextRefreshAt])
+}
+
+model EdmDoctorDepartment {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  doctorExternalId      Int?     @unique
+  firstName             String
+  lastName              String
+  departmentExternalId  Int?
+  departmentName        String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }

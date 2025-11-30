@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 import imagePlaceholder from "@/public/assets/user-img-placeholder.jpg";
 import Link from "next/link";
 import { ButtonLink } from "@/app/components/atoms/ButtonLink";
+import { CreateVisit } from "./temporary";
 
 export default function DashboardPage() {
   const { data: sessionData } = useSession();
   const [userMeta, setUserMeta] = useState<{
+    id?: string | null;
     name?: string | null;
     email?: string | null;
     phone?: string | null;
@@ -34,7 +36,8 @@ export default function DashboardPage() {
         const res = await fetch("/api/user/me");
         if (!res.ok) return;
         const json = await res.json();
-        setUserMeta(json.user || null);
+        // console.log("fetched userMeta:", json.user);
+        setUserMeta(json || null);
       } catch (err) {
         console.error("fetch /api/user/me error", err);
       }
@@ -62,22 +65,35 @@ export default function DashboardPage() {
     }
   };
 
-  const logout = () => {
-    signOut({ callbackUrl: "/login" });
-  };
-
   useEffect(() => {
     if (sessionData?.user?.email) {
       getUserPlan(sessionData.user.email);
     }
   }, [sessionData?.user?.email]);
 
+  // ... (reszta Twojego istniejącego kodu: plan, sidebar, etc.) ...
+
+  // --- New: EDM patient form state ---
+  const [patientName, setPatientName] = useState("");
+  const [patientSurname, setPatientSurname] = useState("");
+  const [patientEmail, setPatientEmail] = useState("");
+  const [patientPesel, setPatientPesel] = useState("");
+  const [patientLoading, setPatientLoading] = useState(false);
+  const [patientError, setPatientError] = useState<string | null>(null);
+  const [patientSuccess, setPatientSuccess] = useState<any | null>(null);
+
+  const logout = () => {
+    signOut({ callbackUrl: "/login" });
+  };
+
+  // ... (twoje useEffecty pobierające userMeta, plan itp.) ...
+
   const avatarSrc = sessionData?.user?.image ?? undefined;
 
   return (
     <section className="bg-background-primary py-16">
       <div className="max-w-6xl mx-auto grid grid-cols-1 xl:grid-cols-4 gap-8">
-        {/* Sidebar */}
+        {/* Sidebar (bez zmian) */}
         <aside className="col-span-1 bg-background-card rounded-2xl p-6 flex flex-col items-center gap-4">
           <div className="w-28 h-28 rounded-full overflow-hidden bg-muted-foreground/10">
             <NextImage
@@ -287,6 +303,15 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Quick cards (twoje istniejące) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* ... existing cards ... */}
+          </div>
+
+          {/* New: Create patient form */}
+          <CreateVisit userId={userMeta?.id ?? ""} />
+          {/* rest of your page ... */}
         </main>
       </div>
     </section>

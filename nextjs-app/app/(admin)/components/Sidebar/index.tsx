@@ -11,6 +11,7 @@ import { signOut } from "next-auth/react";
 const navItems = [
   { href: "/admin", label: "Panel Administratora" },
   { href: "/admin/orders", key: "orders", label: "Zamówienia" },
+  { href: "/admin/edm", key: "edm", label: "EDM" },
   { href: "/admin/settings", label: "Ustawienia" },
 ];
 
