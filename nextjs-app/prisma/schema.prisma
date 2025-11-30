@@ -228,3 +228,14 @@ model EdmAuth {
 
   @@index([nextRefreshAt])
 }
+
+model EdmDoctorDepartment {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  doctorExternalId      Int?     @unique
+  firstName             String
+  lastName              String
+  departmentExternalId  Int?
+  departmentName        String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}

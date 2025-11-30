@@ -62,22 +62,83 @@ export default function DashboardPage() {
     }
   };
 
-  const logout = () => {
-    signOut({ callbackUrl: "/login" });
-  };
-
   useEffect(() => {
     if (sessionData?.user?.email) {
       getUserPlan(sessionData.user.email);
     }
   }, [sessionData?.user?.email]);
 
+  // ... (reszta Twojego istniejącego kodu: plan, sidebar, etc.) ...
+
+  // --- New: EDM patient form state ---
+  const [patientName, setPatientName] = useState("");
+  const [patientSurname, setPatientSurname] = useState("");
+  const [patientEmail, setPatientEmail] = useState("");
+  const [patientPesel, setPatientPesel] = useState("");
+  const [patientLoading, setPatientLoading] = useState(false);
+  const [patientError, setPatientError] = useState<string | null>(null);
+  const [patientSuccess, setPatientSuccess] = useState<any | null>(null);
+
+  const submitCreatePatient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPatientError(null);
+    setPatientSuccess(null);
+
+    if (!patientName || !patientSurname) {
+      setPatientError("Imię i nazwisko są wymagane");
+      return;
+    }
+
+    setPatientLoading(true);
+    try {
+      const res = await fetch("/api/edm/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: patientName,
+          surname: patientSurname,
+          email: patientEmail,
+          pesel: patientPesel,
+        }),
+      });
+
+      const text = await res.text();
+      let json: any = null;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        json = { raw: text };
+      }
+
+      if (!res.ok) {
+        setPatientError(json?.error || JSON.stringify(json));
+      } else {
+        setPatientSuccess(json);
+        setPatientName("");
+        setPatientSurname("");
+        setPatientEmail("");
+        setPatientPesel("");
+      }
+    } catch (err: any) {
+      console.error("create patient error", err);
+      setPatientError(err?.message ?? "Błąd sieci");
+    } finally {
+      setPatientLoading(false);
+    }
+  };
+
+  const logout = () => {
+    signOut({ callbackUrl: "/login" });
+  };
+
+  // ... (twoje useEffecty pobierające userMeta, plan itp.) ...
+
   const avatarSrc = sessionData?.user?.image ?? undefined;
 
   return (
     <section className="bg-background-primary py-16">
       <div className="max-w-6xl mx-auto grid grid-cols-1 xl:grid-cols-4 gap-8">
-        {/* Sidebar */}
+        {/* Sidebar (bez zmian) */}
         <aside className="col-span-1 bg-background-card rounded-2xl p-6 flex flex-col items-center gap-4">
           <div className="w-28 h-28 rounded-full overflow-hidden bg-muted-foreground/10">
             <NextImage
@@ -287,6 +348,93 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Quick cards (twoje istniejące) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* ... existing cards ... */}
+          </div>
+
+          {/* New: Create patient form */}
+          <div className="mt-6 rounded-2xl bg-background-card p-6">
+            <h3 className="text-lg font-semibold text-color-primary">
+              Utwórz pacjenta w myDr EDM
+            </h3>
+            <p className="text-sm text-color-tertiary mt-1">
+              Wypełnij przynajmniej imię i nazwisko. Email i PESEL opcjonalne.
+            </p>
+
+            <form
+              onSubmit={submitCreatePatient}
+              className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 max-w-xl"
+            >
+              <input
+                placeholder="Imię"
+                value={patientName}
+                onChange={(e) => setPatientName(e.target.value)}
+                className="px-3 py-2 rounded border bg-background-primary/20"
+                required
+              />
+              <input
+                placeholder="Nazwisko"
+                value={patientSurname}
+                onChange={(e) => setPatientSurname(e.target.value)}
+                className="px-3 py-2 rounded border bg-background-primary/20"
+                required
+              />
+              <input
+                placeholder="Email"
+                value={patientEmail}
+                onChange={(e) => setPatientEmail(e.target.value)}
+                className="px-3 py-2 rounded border bg-background-primary/20 md:col-span-2"
+                type="email"
+              />
+              <input
+                placeholder="PESEL"
+                value={patientPesel}
+                onChange={(e) => setPatientPesel(e.target.value)}
+                className="px-3 py-2 rounded border bg-background-primary/20 md:col-span-2"
+              />
+
+              <div className="flex gap-2 md:col-span-2 mt-2">
+                <button
+                  type="submit"
+                  disabled={patientLoading}
+                  className="px-4 py-2 rounded bg-color-primary text-black"
+                >
+                  {patientLoading ? "Tworzenie..." : "Utwórz pacjenta"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPatientName("");
+                    setPatientSurname("");
+                    setPatientEmail("");
+                    setPatientPesel("");
+                    setPatientError(null);
+                    setPatientSuccess(null);
+                  }}
+                  className="px-4 py-2 rounded border"
+                >
+                  Wyczyść
+                </button>
+              </div>
+              {patientError && (
+                <div className="text-sm text-red-600 md:col-span-2">
+                  {patientError}
+                </div>
+              )}
+              {patientSuccess && (
+                <div className="text-sm text-green-600 md:col-span-2">
+                  Pacjent utworzony. Odpowiedź API:{" "}
+                  <pre className="whitespace-pre-wrap">
+                    {JSON.stringify(patientSuccess, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </form>
+          </div>
+
+          {/* rest of your page ... */}
         </main>
       </div>
     </section>

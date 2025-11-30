@@ -2,8 +2,7 @@ name: EDM Refresh Tokens
 
 on:
   schedule:
-    # - cron: "0 */1 * * *" # co 1 godzinę
-    - cron: "*/30 * * * *" # co 30 minut
+    - cron: "0 */8 * * *"
   workflow_dispatch: {}
 
 jobs:
