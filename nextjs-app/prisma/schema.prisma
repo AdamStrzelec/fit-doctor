@@ -71,6 +71,8 @@ model User {
 
   weights           WeightEntry[]
 
+  externalPatientId Int?
+
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 }
